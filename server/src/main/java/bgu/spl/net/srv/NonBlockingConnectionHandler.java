@@ -21,6 +21,7 @@ public class NonBlockingConnectionHandler<T> implements ConnectionHandler<T> {
     private final SocketChannel chan;
     private final Reactor reactor;
 
+
     public NonBlockingConnectionHandler(
             MessageEncoderDecoder<T> reader,
             MessagingProtocol<T> protocol,
@@ -119,5 +120,10 @@ public class NonBlockingConnectionHandler<T> implements ConnectionHandler<T> {
     @Override
     public void send(T msg) {
         //IMPLEMENT IF NEEDED
+    }
+
+    @Override
+    public int getConnectionId() {
+        return 0;
     }
 }

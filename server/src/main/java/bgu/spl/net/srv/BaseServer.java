@@ -5,6 +5,7 @@ import bgu.spl.net.api.MessagingProtocol;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 
 public abstract class BaseServer<T> implements Server<T> {
@@ -12,7 +13,9 @@ public abstract class BaseServer<T> implements Server<T> {
     private final int port;
     private final Supplier<MessagingProtocol<T>> protocolFactory;
     private final Supplier<MessageEncoderDecoder<T>> encdecFactory;
+    private final Connections<T> connections;
     private ServerSocket sock;
+    private AtomicInteger counter;
 
     public BaseServer(
             int port,
@@ -22,7 +25,9 @@ public abstract class BaseServer<T> implements Server<T> {
         this.port = port;
         this.protocolFactory = protocolFactory;
         this.encdecFactory = encdecFactory;
+        this.connections = new ConnectionsImpl<T>();
 		this.sock = null;
+        this.counter = new AtomicInteger(0);
     }
 
     @Override
@@ -40,7 +45,9 @@ public abstract class BaseServer<T> implements Server<T> {
                 BlockingConnectionHandler<T> handler = new BlockingConnectionHandler<>(
                         clientSock,
                         encdecFactory.get(),
-                        protocolFactory.get());
+                        protocolFactory.get(),
+                        connections,
+                        counter.getAndIncrement());
 
                 execute(handler);
             }
