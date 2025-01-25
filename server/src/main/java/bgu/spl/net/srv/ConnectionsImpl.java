@@ -1,15 +1,22 @@
 package bgu.spl.net.srv;
 
+import jdk.internal.net.http.common.Pair;
+
 import java.util.HashMap;
 
 public class ConnectionsImpl<T> implements Connections<T> {
 
+    // Key- connectionId,value ConnectionHandler for that client.
     HashMap<Integer,ConnectionHandler<T>> connectionIdToClient;
-    HashMap<String,HashMap<Integer,Boolean>> channelToSubscribedClients;
+    // First Key - channel/Topic, Second Key- connectionId, Value- Subscription id.
+    HashMap<String,HashMap<Integer,Integer>> channelToSubscribedClients;
+    // Key- (connectionId,subscription id), value - channel/topic
+    HashMap<Pair<Integer,Integer>, String>  subscriptionToTopic;
 
     public ConnectionsImpl() {
         connectionIdToClient = new HashMap<>();
         channelToSubscribedClients = new HashMap<>();
+        subscriptionToTopic = new HashMap<>();
     }
 
     @Override
@@ -33,7 +40,11 @@ public class ConnectionsImpl<T> implements Connections<T> {
         connectionIdToClient.remove(connectionId);
         for(String channel:channelToSubscribedClients.keySet())
         {
-            channelToSubscribedClients.get(channel).remove(connectionId);
+            Integer subscriptionId =channelToSubscribedClients.get(channel).remove(connectionId);
+            if(subscriptionId != null)
+            {
+                subscriptionToTopic.remove(new Pair<>(connectionId,subscriptionId));
+            }
         }
     }
 
@@ -43,15 +54,17 @@ public class ConnectionsImpl<T> implements Connections<T> {
     }
 
     @Override
-    public void subscribe(int connectionId, String channel, int id) {
+    public void subscribe(int connectionId, String channel, int subscriptionId) {
         if (!channelToSubscribedClients.containsKey(channel))
             channelToSubscribedClients.put(channel, new HashMap<>());
-        channelToSubscribedClients.get(channel).put(connectionId, true);
+        channelToSubscribedClients.get(channel).put(connectionId, subscriptionId);
+        subscriptionToTopic.put(new Pair<>(connectionId,subscriptionId), channel);
 
     }
 
     @Override
-    public  void unsubscribe(int connectionId, int id){
-        //channelToSubscribedClients.get(Channel).remove(connectionId);
+    public  void unsubscribe(int connectionId, int subscriptionId){
+       String topic= subscriptionToTopic.remove(new Pair<>(connectionId,subscriptionId));
+       channelToSubscribedClients.get(topic).remove(connectionId);
     }
 }
