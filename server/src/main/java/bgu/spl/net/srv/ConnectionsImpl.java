@@ -43,12 +43,15 @@ public class ConnectionsImpl<T> implements Connections<T> {
     }
 
     @Override
-    public void subscribe(int connectionId, String channel) {
+    public void subscribe(int connectionId, String channel, int id) {
         if (!channelToSubscribedClients.containsKey(channel))
             channelToSubscribedClients.put(channel, new HashMap<>());
         channelToSubscribedClients.get(channel).put(connectionId, true);
 
     }
 
-    
+    @Override
+    public  void unsubscribe(int connectionId, int id){
+        //channelToSubscribedClients.get(Channel).remove(connectionId);
+    }
 }
