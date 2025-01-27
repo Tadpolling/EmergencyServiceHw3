@@ -1,7 +1,5 @@
 package bgu.spl.net.srv;
 
-import jdk.internal.net.http.common.Pair;
-
 import java.util.HashMap;
 
 public class ConnectionsImpl<T> implements Connections<T> {
@@ -11,7 +9,8 @@ public class ConnectionsImpl<T> implements Connections<T> {
     // First Key - channel/Topic, Second Key- connectionId, Value- Subscription id.
     HashMap<String,HashMap<Integer,Integer>> channelToSubscribedClients;
     // Key- (connectionId,subscription id), value - channel/topic
-    HashMap<Pair<Integer,Integer>, String>  subscriptionToTopic;
+
+    HashMap<String, String>  subscriptionToTopic;
 
     public ConnectionsImpl() {
         connectionIdToClient = new HashMap<>();
@@ -43,7 +42,7 @@ public class ConnectionsImpl<T> implements Connections<T> {
             Integer subscriptionId =channelToSubscribedClients.get(channel).remove(connectionId);
             if(subscriptionId != null)
             {
-                subscriptionToTopic.remove(new Pair<>(connectionId,subscriptionId));
+                subscriptionToTopic.remove(combineConnecitonIdAndSubscriptionId(connectionId,subscriptionId));
             }
         }
     }
@@ -58,13 +57,17 @@ public class ConnectionsImpl<T> implements Connections<T> {
         if (!channelToSubscribedClients.containsKey(channel))
             channelToSubscribedClients.put(channel, new HashMap<>());
         channelToSubscribedClients.get(channel).put(connectionId, subscriptionId);
-        subscriptionToTopic.put(new Pair<>(connectionId,subscriptionId), channel);
+        subscriptionToTopic.put(combineConnecitonIdAndSubscriptionId(connectionId,subscriptionId), channel);
 
     }
 
     @Override
     public  void unsubscribe(int connectionId, int subscriptionId){
-       String topic= subscriptionToTopic.remove(new Pair<>(connectionId,subscriptionId));
+       String topic= subscriptionToTopic.remove(combineConnecitonIdAndSubscriptionId(connectionId,subscriptionId));
        channelToSubscribedClients.get(topic).remove(connectionId);
+    }
+
+    private String combineConnecitonIdAndSubscriptionId(int connectionId, int subscriptionId) {
+        return connectionId + ":" + subscriptionId;
     }
 }

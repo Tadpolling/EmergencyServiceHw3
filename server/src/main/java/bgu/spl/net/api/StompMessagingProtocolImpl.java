@@ -1,17 +1,18 @@
-package bgu.spl.net.impl.stomp;
-
-import bgu.spl.net.api.StompMessagingProtocol;
+package bgu.spl.net.api;
+import bgu.spl.net.api.StompMessageDetails;
 import bgu.spl.net.srv.ConnectionHandler;
 import bgu.spl.net.srv.Connections;
+import utils.Pair;
 
-public class StompMesssagingProtocolImpl implements StompMessagingProtocol<String> {
+
+public class StompMessagingProtocolImpl implements StompMessagingProtocol<String> {
 
     private int connectionId;
     private Connections<String> connections;
     private boolean shouldTerminate;
     private ConnectionHandler<String> connectionHandler;
 
-    StompMesssagingProtocolImpl() {
+    public StompMessagingProtocolImpl() {
         this.shouldTerminate = false;
     }
 
@@ -33,7 +34,14 @@ public class StompMesssagingProtocolImpl implements StompMessagingProtocol<Strin
         switch (details.messageType)
         {
             case "CONNECT":
-                connections.connect(connectionId,connectionHandler);
+                Pair<Boolean, StompResponse> loginResponse= LoginHandler.login(
+                        connectionId,details.version,details.host,details.username,details.password);
+                if(loginResponse.getFirst())
+                    connections.connect(connectionId,connectionHandler);
+                if(loginResponse.getSecond().isError())
+                    shouldTerminate=true;
+                connectionHandler.send(loginResponse.getSecond().getResponseMessage());
+
             break;
             case "SEND":
                 connections.send(details.destination,details.message);
@@ -45,7 +53,12 @@ public class StompMesssagingProtocolImpl implements StompMessagingProtocol<Strin
                 connections.unsubscribe(connectionId,details.id);
                 break;
             case "DISCONNECT":
+                System.out.println("Disconnecting");
+                StompResponse response= LoginHandler.logout(connectionId,details.id);
                 connections.disconnect(connectionId);
+                connectionHandler.send(response.getResponseMessage());
+                System.out.println(response.getResponseMessage());
+
             break;
 
         }
