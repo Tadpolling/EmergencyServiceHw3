@@ -14,8 +14,14 @@ public class StompMessageDetails {
     public String password;
     private boolean isConnectingMessage;
     public StompMessageDetails(String fullMessage) {
-        String[] parts = fullMessage.split("\n");
-        System.out.println(fullMessage);
+
+        int headersEndIndex =fullMessage.indexOf("\n\n");
+        String messageHeaders = fullMessage.substring(0, headersEndIndex);
+        message = fullMessage.substring(headersEndIndex).trim();
+
+
+        String[] parts = messageHeaders.split("\n");
+        System.out.println(messageHeaders);
         for (String part : parts) {
             System.out.println(part+", ");
         }
@@ -60,7 +66,6 @@ public class StompMessageDetails {
 
             }
         }
-        message = parts[parts.length-2].trim();
     }
 
     public void printMessageDetails()
