@@ -29,4 +29,14 @@ public class StompResponseHandler {
         return new StompResponse(response,false);
     }
 
+    public static StompResponse createMessageResponse(int subscriptionId,int messageId,String destination,String message)
+    {
+        String response = "MESSAGE\n";
+        response += "subscription:"+subscriptionId+"\n";
+        response += "message-id:"+messageId+"\n";
+        response += "destination:"+destination+"\n";
+        response += message+"\n";
+        response += "\u0000";
+        return new StompResponse(response,false);
+    }
 }

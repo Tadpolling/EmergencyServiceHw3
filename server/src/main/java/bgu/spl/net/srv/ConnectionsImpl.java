@@ -1,6 +1,12 @@
 package bgu.spl.net.srv;
 
+import bgu.spl.net.api.StompResponse;
+import bgu.spl.net.api.StompResponseHandler;
+
 import java.util.HashMap;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
+
 
 public class ConnectionsImpl<T> implements Connections<T> {
 
@@ -30,7 +36,19 @@ public class ConnectionsImpl<T> implements Connections<T> {
     public void send(String channel, T msg) {
         for(int connectionId :  channelToSubscribedClients.get(channel).keySet())
         {
-            send(connectionId, msg);
+            int subId = channelToSubscribedClients.get(channel).get(connectionId);
+            connectionIdToClient.get(connectionId).send(msg);
+        }
+    }
+
+    @Override
+    public void send(String channel, Function<Integer,T> createMessageFunc) {
+        System.out.println(channel);
+        System.out.println(channelToSubscribedClients.keySet());
+        for(int connectionId :  channelToSubscribedClients.get(channel).keySet())
+        {
+            int subId = channelToSubscribedClients.get(channel).get(connectionId);
+            connectionIdToClient.get(connectionId).send(createMessageFunc.apply(subId));
         }
     }
 
@@ -54,6 +72,7 @@ public class ConnectionsImpl<T> implements Connections<T> {
 
     @Override
     public void subscribe(int connectionId, String channel, int subscriptionId) {
+
         if (!channelToSubscribedClients.containsKey(channel))
             channelToSubscribedClients.put(channel, new HashMap<>());
         channelToSubscribedClients.get(channel).put(connectionId, subscriptionId);

@@ -26,7 +26,9 @@ public class StompMessageDetails {
         for(int i=1; i<parts.length; i++) {
             String[] lineHalfs = parts[i].trim().split(":");
             if(lineHalfs[0].equals("destination")) {
-                destination = lineHalfs[1];
+                destination = lineHalfs[1].trim();
+                if(destination.charAt(0)=='/')
+                    destination = destination.substring(1);
                 continue;
             }
             if(lineHalfs[0].equals("id")) {
