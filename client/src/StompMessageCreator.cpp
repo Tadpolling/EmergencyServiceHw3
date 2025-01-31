@@ -1,4 +1,4 @@
-#include "StompMessageCreator.h"
+#include "../include/StompMessageCreator.h"
 
 std::string StompMessageCreator::createConnectMessage(std::string version, std::string host, std::string login, std::string passcode)
 {

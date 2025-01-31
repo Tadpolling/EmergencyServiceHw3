@@ -45,7 +45,7 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
                 if(loginResponse.getFirst())
                     connections.connect(connectionId,connectionHandler);
                 if(loginResponse.getSecond().isError())
-                    shouldTerminate=true;
+                    shouldTerminate=false;
                 connectionHandler.send(loginResponse.getSecond().getResponseMessage());
 
             break;

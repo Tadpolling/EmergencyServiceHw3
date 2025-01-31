@@ -1,11 +1,19 @@
 #include <stdlib.h>
 #include <vector>
+#include <map>
+#include <string>
+#include <fstream>
+#include <ctime>
 #include "../include/ConnectionHandler.h"
-
-static std::vector<std::string> split(std::string& string, char delimiter);
+#include "../include/event.h"
+#include "../include/utils.h"
 /**
 * This code assumes that the server replies the exact text the client sent it (as opposed to the practical session example)
 */
+
+std::string formatNumber(int number);
+bool lessThanEventComparator(const Event& e1, const Event& e2);
+
 int main (int argc, char *argv[]) {
     if (argc < 3) {
         std::cerr << "Usage: " << argv[0] << " host port" << std::endl << std::endl;
@@ -20,49 +28,45 @@ int main (int argc, char *argv[]) {
         return 1;
     }
 	bool loggedIn = false;
+    unsigned int subscriptionId = 0;
+    unsigned int receiptCount=0;
+    bool wait_response=true;
+    std::map<std::string, int> subscriptionToSubId = std::map<std::string,int>();
+    std::string current_user="";
+    // Key- User,ChannelName, Value- list of reports
+    std::map<std::pair<std::string,std::string>,std::vector<Event>> reports_by_user_and_channel
+     = std::map<std::pair<std::string,std::string>,std::vector<Event>>();
 	//From here we will see the rest of the ehco client implementation:
     while (1) {
         const short bufsize = 1024;
         char buf[bufsize];
         std::cin.getline(buf, bufsize);
 		std::string line(buf);
-		int len=line.length();
-        std::cout<<line<<std::endl;
         std::vector<std::string> input_parameters = split(line,' ');
-
+        wait_response=true;
+        // for(int i=0;i<input_parameters.size();i++)
+        // {
+        //     std::cout<<input_parameters[i]<<std::endl;
+        // }
         std::string command = input_parameters[0];
         if(command.compare("login")==0)
         {
-            if(input_parameters.size()!=4)
-            {
-                std::cout << "login command needs 3 args: {host:port} {username} {password}"<<std::endl;
-            }
-            loggedIn = true;
-            std::vector<std::string> host_port = split(input_parameters[1],':');
-            std::string host=host_port[0];
-            int port= atoi(host_port[1].c_str());
-            std::string username = input_parameters[2];
-            std::string password = input_parameters[3];
+            std::cout<<"Starting login as: " <<loggedIn <<std::endl;
+            handle_login(input_parameters,connectionHandler,loggedIn,current_user);
+            wait_response=false;
         }
         if(!loggedIn)
         {
             std::cout << "please login first" <<std::endl;
+            wait_response=false;
         }
         if(command.compare("join")==0)
         {
-            if(input_parameters.size()!=2)
-            {
-                std::cout << "join command needs 1 arg: {channel_name}"<<std::endl;
-            }
-            std::string channel_name = input_parameters[1];
+            handle_join(input_parameters,connectionHandler,subscriptionToSubId,subscriptionId);
         }
         if(command.compare("exit")==0)
         {
-            if(input_parameters.size()!=2)
-            {
-                std::cout << "exit command needs 1 arg: {channel_name}"<<std::endl;
-            }
-            std::string channel_name = input_parameters[1];
+            handle_exit(input_parameters,connectionHandler,subscriptionToSubId);
         }
         if(command.compare("report")==0)
         {
@@ -70,7 +74,27 @@ int main (int argc, char *argv[]) {
             {
                 std::cout << "report command needs 1 arg: {file}"<<std::endl;
             }
+
+
             std::string file_path = input_parameters[1];
+            names_and_events result = parseEventsFile(file_path);
+            std::pair<std::string,std::string> key =std::pair<std::string,std::string>(current_user,result.channel_name);
+            if(reports_by_user_and_channel.find(key)==reports_by_user_and_channel.end())
+            {
+                reports_by_user_and_channel[key]=std::vector<Event>();
+            }
+            for(size_t i=0;i<result.events.size();i++)
+            {
+                reports_by_user_and_channel[std::pair<std::string,std::string>(current_user,result.channel_name)].push_back(result.events[i]);
+                std::string reportMessage = StompMessageCreator::createSendMessage(result.channel_name,result.events[i].get_description());
+                if(!connectionHandler.sendFrameAscii(reportMessage,'\0'))
+                {
+                    std::cout<<"Could not connect to server"<<std::endl;
+                    //return;
+                }
+            }
+
+
         }
         if(command.compare("summary")==0)
         {
@@ -81,57 +105,71 @@ int main (int argc, char *argv[]) {
             std::string channel_name = input_parameters[1];
             std::string user = input_parameters[2];
             std::string file_path = input_parameters[3];
+            std::pair<std::string,std::string> currentKey =std::pair<std::string,std::string>(user,channel_name);
+            std::ofstream file;
+            file.open(file_path,std::fstream::trunc);
+            int active_count =0;
+            int forces_arrival_at_scene_count =0;
+            std::string active_str ="active";
+            std::string forces_arrival_str = "forces_arrival_at_scene";
+            for(Event e : reports_by_user_and_channel[currentKey])
+            {
+   
+                if(e.get_general_information().at(active_str).compare("true"))
+                    active_count++;
+                if(e.get_general_information().at(forces_arrival_str).compare("true"))
+                    forces_arrival_at_scene_count++;
+            }
+            file<<"Channel "<<channel_name<<std::endl;
+            file<<"Stats:"<<std::endl;
+            file<<"Total: "<<reports_by_user_and_channel[std::pair<std::string,std::string>(user,channel_name)].size()<<std::endl;
+            file<<"active: " <<active_count<< std::endl;
+            file<<"forces arrival at scene: " <<forces_arrival_at_scene_count<<std::endl;
+            file<< std::endl;
+            file<<"Event Reports:"<<std::endl;
+            file<<std::endl;
+            std::sort(reports_by_user_and_channel[currentKey].begin(),reports_by_user_and_channel[currentKey].end(),lessThanEventComparator);
+            for(size_t i=0;i<reports_by_user_and_channel[currentKey].size();i++)
+            {
+                Event& e = reports_by_user_and_channel[currentKey][i];
+                file<< "Report_"<<i+1<<":"<<std::endl;
+                file<<"\tcity: "<<e.get_city()<<std::endl;
+                time_t time = e.get_date_time()+320*60;
+                tm* timeinfo = localtime(&time);
+
+                file<<"\tdate time: "<<formatNumber(timeinfo->tm_mday)<<"/"<<formatNumber(timeinfo->tm_mon+1)<<"/"<<formatNumber((timeinfo->tm_year+1900)%100) <<" "<<
+                formatNumber(timeinfo->tm_hour) <<":"<<formatNumber(timeinfo->tm_min)<<std::endl;
+                file<<"\tevent name: "<<e.get_name()<<std::endl;
+                std::string summary_string = e.get_description().size() <=27 ? e.get_description() : e.get_description().substr(0,27)+"...";
+                file<<"\tsummary: "<<summary_string<<std::endl; 
+            }
+            file.close();
+
         }
         if(command.compare("logout")==0)
         {
-            if(input_parameters.size()!=1)
-            {
-                std::cout << "logout command needs 0 args"<<std::endl;
-            }
-            loggedIn=false;
+            handle_logout(input_parameters,connectionHandler,loggedIn,receiptCount);
         }
-        if (!connectionHandler.sendLine(line)) {
-            std::cout << "Disconnected. Exiting...\n" << std::endl;
-            break;
+        if(wait_response)
+        {
+            std::string response;
+            check_if_response_is_error(connectionHandler,response);
         }
-		// connectionHandler.sendLine(line) appends '\n' to the message. Therefor we send len+1 bytes.
-        std::cout << "Sent " << len+1 << " bytes to server" << std::endl;
 
- 
-        // We can use one of three options to read data from the server:
-        // 1. Read a fixed number of characters
-        // 2. Read a line (up to the newline character using the getline() buffered reader
-        // 3. Read up to the null character
-        std::string answer;
-        // Get back an answer: by using the expected number of bytes (len bytes + newline delimiter)
-        // We could also use: connectionHandler.getline(answer) and then get the answer without the newline char at the end
-        if (!connectionHandler.getLine(answer)) {
-            std::cout << "Disconnected. Exiting...\n" << std::endl;
-            break;
-        }
-        
-		len=answer.length();
-		// A C string must end with a 0 char delimiter.  When we filled the answer buffer from the socket
-		// we filled up to the \n char - we must make sure now that a 0 char is also present. So we truncate last character.
-        answer.resize(len-1);
-        std::cout << "Reply: " << answer << " " << len << " bytes " << std::endl << std::endl;
-        if (answer == "bye") {
-            std::cout << "Exiting...\n" << std::endl;
-            break;
-        }
     }
     return 0;
 }
 
-static std::vector<std::string> split(std::string& string, char delimiter)
+std::string formatNumber(int number)
 {
-    std::vector<std::string> strings= std::vector<std::string>();
-    size_t index;
-    while((index= string.find(delimiter)) != std::string::npos)
-    {
-        std::string string_part = string.substr(0,index);
-        string = string.substr(index+1);
-        strings.push_back(string_part);
-    }
-    return strings;
+   return ((number <10)? "0"+std::to_string(number): std::to_string(number));
+}
+
+bool lessThanEventComparator(const Event& e1, const Event& e2)
+{
+    if(e1.get_date_time()<e2.get_date_time())
+        return true;
+    if(e1.get_date_time()>e2.get_date_time())
+        return false;
+    return e1.get_name().compare(e2.get_name());
 }

@@ -1,6 +1,8 @@
 #include <stdlib.h>
+#include <vector>
 #include "../include/ConnectionHandler.h"
 
+static std::vector<std::string> split(std::string& string, char delimiter);
 /**
 * This code assumes that the server replies the exact text the client sent it (as opposed to the practical session example)
 */
@@ -17,7 +19,7 @@ int main (int argc, char *argv[]) {
         std::cerr << "Cannot connect to " << host << ":" << port << std::endl;
         return 1;
     }
-	
+	bool loggedIn = false;
 	//From here we will see the rest of the ehco client implementation:
     while (1) {
         const short bufsize = 1024;
@@ -25,6 +27,70 @@ int main (int argc, char *argv[]) {
         std::cin.getline(buf, bufsize);
 		std::string line(buf);
 		int len=line.length();
+        std::cout<<line<<std::endl;
+        std::vector<std::string> input_parameters = split(line,' ');
+
+        std::string command = input_parameters[0];
+        if(command.compare("login")==0)
+        {
+            if(input_parameters.size()!=4)
+            {
+                std::cout << "login command needs 3 args: {host:port} {username} {password}"<<std::endl;
+            }
+            loggedIn = true;
+            std::vector<std::string> host_port = split(input_parameters[1],':');
+            std::string host=host_port[0];
+            int port= atoi(host_port[1].c_str());
+            std::string username = input_parameters[2];
+            std::string password = input_parameters[3];
+
+        }
+        if(!loggedIn)
+        {
+            std::cout << "please login first" <<std::endl;
+        }
+        if(command.compare("join")==0)
+        {
+            if(input_parameters.size()!=2)
+            {
+                std::cout << "join command needs 1 arg: {channel_name}"<<std::endl;
+            }
+            std::string channel_name = input_parameters[1];
+        }
+        if(command.compare("exit")==0)
+        {
+            if(input_parameters.size()!=2)
+            {
+                std::cout << "exit command needs 1 arg: {channel_name}"<<std::endl;
+            }
+            std::string channel_name = input_parameters[1];
+        }
+        if(command.compare("report")==0)
+        {
+            if(input_parameters.size()!=2)
+            {
+                std::cout << "report command needs 1 arg: {file}"<<std::endl;
+            }
+            std::string file_path = input_parameters[1];
+        }
+        if(command.compare("summary")==0)
+        {
+            if(input_parameters.size()!=4)
+            {
+                std::cout << "summary command needs 3 args: {channel_name} {user} {file}"<<std::endl;
+            }
+            std::string channel_name = input_parameters[1];
+            std::string user = input_parameters[2];
+            std::string file_path = input_parameters[3];
+        }
+        if(command.compare("logout")==0)
+        {
+            if(input_parameters.size()!=1)
+            {
+                std::cout << "logout command needs 0 args"<<std::endl;
+            }
+            loggedIn=false;
+        }
         if (!connectionHandler.sendLine(line)) {
             std::cout << "Disconnected. Exiting...\n" << std::endl;
             break;
@@ -56,4 +122,17 @@ int main (int argc, char *argv[]) {
         }
     }
     return 0;
+}
+
+static std::vector<std::string> split(std::string& string, char delimiter)
+{
+    std::vector<std::string> strings= std::vector<std::string>();
+    size_t index;
+    while((index= string.find(delimiter)) != std::string::npos)
+    {
+        std::string string_part = string.substr(0,index);
+        string = string.substr(index+1);
+        strings.push_back(string_part);
+    }
+    return strings;
 }

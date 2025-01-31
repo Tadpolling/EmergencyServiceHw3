@@ -1,17 +1,8 @@
 #include "../include/event.h"
-#include "../include/json.hpp"
-#include <iostream>
-#include <fstream>
-#include <string>
-#include <map>
-#include <vector>
-#include <sstream>
-#include <cstring>
-
-#include "../include/keyboardInput.h"
-
 using namespace std;
 using json = nlohmann::json;
+//#include "../include/keyboardInput.h"
+
 
 Event::Event(std::string channel_name, std::string city, std::string name, int date_time,
              std::string description, std::map<std::string, std::string> general_information)
