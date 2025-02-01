@@ -17,4 +17,6 @@ public interface StompMessagingProtocol<T>  {
     boolean shouldTerminate();
 
 	int getConnectionId();
+
+	boolean shouldStart();
 }

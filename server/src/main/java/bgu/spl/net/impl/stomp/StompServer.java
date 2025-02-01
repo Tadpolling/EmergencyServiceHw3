@@ -7,11 +7,26 @@ import bgu.spl.net.srv.Server;
 public class StompServer {
 
     public static void main(String[] args) {
-        // you can use any server...
-        Server.threadPerClient(
-                15000, //port
+
+        int port = Integer.parseInt(args[0]);
+        String serverType = args[1];
+        switch (serverType) {
+            case "tpc":
+                Server.threadPerClient(
+                port, //port
                 ()->new StompMessagingProtocolImpl(), //protocol factory
                 LineMessageEncoderDecoder::new //message encoder decoder factory
-        ).serve();
+            ).serve();
+                break;
+            case "reactor":
+                Server.reactor(5,
+                        port,
+                        ()->new StompMessagingProtocolImpl(),
+                        LineMessageEncoderDecoder::new
+                ).serve();
+                break;
+        }
+
+
     }
 }

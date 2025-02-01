@@ -16,10 +16,12 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
     private Connections<String> connections;
     private boolean shouldTerminate;
     private ConnectionHandler<String> connectionHandler;
+    private boolean shouldStart;
 
 
     public StompMessagingProtocolImpl() {
         this.shouldTerminate = false;
+        this.shouldStart = true;
     }
 
     @Override
@@ -27,15 +29,12 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
         this.connectionId = connectionId;
         this.connections = connections;
         this.connectionHandler = connectionHandler;
+        this.shouldTerminate = false;
     }
 
     @Override
     public void process(String message) {
-        //System.out.println(message);
-        //connections.send(connectionId, message.toUpperCase());
-        //message = "SEND\ndestination:/topic/a\nHello topic a\n\0";
         StompMessageDetails details = new StompMessageDetails(message);
-        details.printMessageDetails();
         StompResponse response;
         switch (details.messageType)
         {
@@ -59,7 +58,7 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
                 connections.subscribe(connectionId, details.destination, details.id);
                 response= StompResponseHandler.createReceipt(details.receipt);
                 connectionHandler.send(response.getResponseMessage());
-                System.out.println(response.getResponseMessage());
+                //System.out.println(response.getResponseMessage());
                 break;
             case "UNSUBSCRIBE":
                 connections.unsubscribe(connectionId,details.id);
@@ -70,7 +69,7 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
                 response= LoginHandler.logout(connectionId,details.receipt);
                 connections.disconnect(connectionId);
                 connectionHandler.send(response.getResponseMessage());
-                System.out.println(response.getResponseMessage());
+                //System.out.println(response.getResponseMessage());
 
             break;
 
@@ -91,6 +90,10 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
         return connectionId;
     }
 
+    @Override
+    public boolean shouldStart() {
+        return shouldStart;
+    }
 
 
 }

@@ -1,43 +1,13 @@
-Channel police
+Channel fire
 Stats:
-Total: 7
-active: 2
-forces arrival at scene: 3
+Total: 1
+active: 1
+forces arrival at scene: 1
 
 Event Reports:
 
 Report_1:
-	city: Raccoon City
-	date time: 23/12/24 13:05
-	event name: Burglary
-	summary: Suspect broke into a reside...
-Report_2:
-	city: Liberty City
-	date time: 23/12/24 19:00
-	event name: Grand Theft Auto
-	summary: Pink Lampadati Felon with l...
-Report_3:
-	city: Vice City
-	date time: 24/12/24 07:40
-	event name: Hit and Run
-	summary: Black SUV struck a pedestri...
-Report_4:
-	city: Silent Hill
-	date time: 25/12/24 03:35
-	event name: Armed Robbery
-	summary: Two masked suspects armed w...
-Report_5:
-	city: Pallet Town
-	date time: 26/12/24 02:50
-	event name: Assault
-	summary: Male suspect assaulted anot...
-Report_6:
-	city: Gotham City
-	date time: 26/12/24 11:40
-	event name: Drug Possession Arrest
-	summary: Police apprehended a suspec...
-Report_7:
-	city: Los Alamos
-	date time: 01/01/25 03:00
-	event name: Vandalism
-	summary: Multiple cars were spray-pa...
+	city: San Francisco
+	date time: 23/12/24 18:56
+	event name: Extreme Fire
+	summary: Lots of fire.

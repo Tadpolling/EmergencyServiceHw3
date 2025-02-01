@@ -19,12 +19,7 @@ public class StompMessageDetails {
         String messageHeaders = fullMessage.substring(0, headersEndIndex);
         message = fullMessage.substring(headersEndIndex).trim();
 
-
         String[] parts = messageHeaders.split("\n");
-        System.out.println(messageHeaders);
-        for (String part : parts) {
-            System.out.println(part+", ");
-        }
         messageType = parts[0].trim();
         if (messageType.equals("CONNECT")) {
             isConnectingMessage = true;

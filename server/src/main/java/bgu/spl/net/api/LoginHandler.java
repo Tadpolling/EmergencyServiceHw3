@@ -53,8 +53,6 @@ public class LoginHandler {
 
     private static boolean isCorrectLoginInfo(String user, String pass)
     {
-        System.out.println(user+","+pass);
-        System.out.println(users.get(user));
         return users.get(user).getFirst().equals(pass);
     }
 

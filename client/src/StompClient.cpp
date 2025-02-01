@@ -113,7 +113,6 @@ void socketHandler(SocketHandlerInput socketInput)
                 int index=0;
                 for(;response_str[index]<'A'|| response_str[index]>'Z';index++);
                 response_str=response_str.substr(index);
-
                 // Seperating headers and body
                 std::string response_type = response_str.substr(0,response_str.find('\n'));
                 int bodyIndex = response_str.find("\n\n");

@@ -50,7 +50,7 @@ if(input_parameters.size()!=4)
             }
             else
             {
-                std::cout<< errorBody<<std::endl;
+                std::cout<<"Error: "<< errorBody<<std::endl;
             }
                
 }
