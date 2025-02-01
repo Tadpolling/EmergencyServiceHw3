@@ -9,7 +9,7 @@ public interface Connections<T> {
 
     void send(String channel, T msg);
 
-    void send(String channel, Function<Integer,T> createMessageFunc);
+    void send(String channel,int senderConnectionId, Function<Integer,T> createMessageFunc);
 
     void disconnect(int connectionId);
 

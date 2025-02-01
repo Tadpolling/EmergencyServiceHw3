@@ -12,9 +12,9 @@ public class StompResponseHandler {
     public static StompResponse createErrorResponse(String errorMessage,String extraInformation,String details)
     {
         String response = "ERROR\n";
-        response += "message:"+ errorMessage + "\n";
+        response += "message:"+ errorMessage + "\n\n";
         if(extraInformation != null)
-            response+=extraInformation+"\n";
+            response+=extraInformation+"\n" ;
         if(details != null)
             response +="\n"+details+"\n";
         response += "\u0000";

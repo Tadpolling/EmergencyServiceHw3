@@ -8,7 +8,6 @@
 #include <vector>
 #include <sstream>
 #include <cstring>
-#include "../include/utils.h"
 
 class Event
 {
@@ -32,6 +31,7 @@ public:
     Event(const std::string & frame_body);
     virtual ~Event();
     void setEventOwnerUser(std::string setEventOwnerUser);
+    void setChannelName(std::string channelName);
     const std::string &getEventOwnerUser() const;
     const std::string &get_channel_name() const;
     const std::string &get_city() const;
@@ -49,3 +49,5 @@ struct names_and_events {
 
 // function that parses the json file and returns a names_and_events object
 names_and_events parseEventsFile(std::string json_path);
+
+void split_str(std::string& string, char delimiter, std::vector<std::string>& strings);

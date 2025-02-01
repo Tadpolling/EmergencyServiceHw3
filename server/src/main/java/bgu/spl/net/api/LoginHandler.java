@@ -32,7 +32,7 @@ public class LoginHandler {
         else
         {
             // Wrong Password
-            return new Pair<>(false,StompResponseHandler.createErrorResponse("Password is incorrect",null,null));
+            return new Pair<>(false,StompResponseHandler.createErrorResponse("Wrong password",null,null));
         }
     }
 

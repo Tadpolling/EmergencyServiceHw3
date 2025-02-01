@@ -19,6 +19,11 @@ void Event::setEventOwnerUser(std::string setEventOwnerUser) {
     eventOwnerUser = setEventOwnerUser;
 }
 
+void Event::setChannelName(std::string channelName)
+{
+    this->channel_name=channelName;
+}
+
 const std::string &Event::getEventOwnerUser() const {
     return eventOwnerUser;
 }
@@ -134,4 +139,16 @@ names_and_events parseEventsFile(std::string json_path)
     names_and_events events_and_names{channel_name, events};
 
     return events_and_names;
+}
+
+void split_str(std::string& string, char delimiter, std::vector<std::string>& strings)
+{
+    size_t index;
+    while((index= string.find(delimiter)) != std::string::npos)
+    {
+        std::string string_part = string.substr(0,index);
+        string = string.substr(index+1);
+        strings.push_back(string_part);
+    }
+    strings.push_back(string);
 }

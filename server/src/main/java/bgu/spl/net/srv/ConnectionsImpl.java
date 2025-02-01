@@ -42,11 +42,11 @@ public class ConnectionsImpl<T> implements Connections<T> {
     }
 
     @Override
-    public void send(String channel, Function<Integer,T> createMessageFunc) {
-        System.out.println(channel);
-        System.out.println(channelToSubscribedClients.keySet());
+    public void send(String channel,int senderConnectionId, Function<Integer,T> createMessageFunc) {
         for(int connectionId :  channelToSubscribedClients.get(channel).keySet())
         {
+            if(senderConnectionId == connectionId)
+                continue;
             int subId = channelToSubscribedClients.get(channel).get(connectionId);
             connectionIdToClient.get(connectionId).send(createMessageFunc.apply(subId));
         }

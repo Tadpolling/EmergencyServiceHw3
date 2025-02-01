@@ -53,7 +53,7 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
                 int messageId = messageIdCounter.incrementAndGet();
                 Function<Integer,String> subIdToMessageFunc= (subId)->StompResponseHandler.createMessageResponse(subId,
                         messageId, details.destination, details.message).getResponseMessage();
-                connections.send(details.destination, subIdToMessageFunc);
+                connections.send(details.destination,connectionId, subIdToMessageFunc);
                 break;
             case "SUBSCRIBE":
                 connections.subscribe(connectionId, details.destination, details.id);
@@ -67,7 +67,7 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
                 connectionHandler.send(response.getResponseMessage());
                 break;
             case "DISCONNECT":
-                response= LoginHandler.logout(connectionId,details.id);
+                response= LoginHandler.logout(connectionId,details.receipt);
                 connections.disconnect(connectionId);
                 connectionHandler.send(response.getResponseMessage());
                 System.out.println(response.getResponseMessage());
